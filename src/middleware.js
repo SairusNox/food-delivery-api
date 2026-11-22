@@ -44,7 +44,8 @@ function validateDish(req, res, next) {
 // Express распознаёт обработчик ошибок по четырём параметрам.
 function errorHandler(err, req, res, next) {
   if (res.headersSent) return next(err);
-  const status = err.type === 'entity.parse.failed' ? 400
+  const status = ['ValidationError', 'CastError', 'StrictModeError'].includes(err.name) ? 400
+    : err.type === 'entity.parse.failed' ? 400
     : err.type === 'entity.too.large' ? 413 : (err.status || 500);
   const message = err.type === 'entity.parse.failed' ? 'Некорректный JSON'
     : status === 413 ? 'Тело запроса слишком большое'

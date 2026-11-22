@@ -1,13 +1,13 @@
 {
   "info": {
-    "name": "Доставка еды - Node.js и Express",
+    "name": "Доставка еды - MongoDB и Mongoose",
     "description": "CRUD, middleware, проверка ошибок. Запускать по порядку. Сервер: npm start.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://127.0.0.1:3010",
+      "value": "http://127.0.0.1:3011",
       "type": "string"
     }
   ],
@@ -136,7 +136,7 @@
             "exec": [
               "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
               "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
-              "pm.test(\"Правильный id\", () => pm.expect(pm.response.json().data.id).to.eql(Number(pm.collectionVariables.get(\"dishId\"))));"
+              "pm.test(\"Правильный id\", () => pm.expect(pm.response.json().data.id).to.eql(pm.collectionVariables.get(\"dishId\")));"
             ]
           }
         }
