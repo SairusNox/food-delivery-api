@@ -7,7 +7,7 @@
 Требуется Node.js 22 или новее. В папке проекта:
 
 ```powershell
-npm install
+npm ci
 npm start
 ```
 
