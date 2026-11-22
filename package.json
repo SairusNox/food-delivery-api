@@ -1,0 +1,10 @@
+{
+  "name": "food-delivery-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Учебный REST API доставки еды на Node.js и Express",
+  "main": "src/server.js",
+  "scripts": {"start": "node src/server.js", "dev": "node --watch src/server.js", "test": "node --test"},
+  "engines": {"node": ">=22"},
+  "dependencies": {"express": "^5.1.0"}
+}

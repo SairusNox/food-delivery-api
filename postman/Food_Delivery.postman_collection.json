@@ -1,0 +1,399 @@
+{
+  "info": {
+    "name": "Доставка еды - Node.js и Express",
+    "description": "CRUD, middleware, проверка ошибок. Запускать по порядку. Сервер: npm start.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:3010",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Сервер работает",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+              "pm.test(\"Сервер готов\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/health"
+      },
+      "response": []
+    },
+    {
+      "name": "02 Получить меню",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+              "const result = pm.response.json();",
+              "pm.test(\"Список и счётчик согласованы\", () => { pm.expect(result.data).to.be.an(\"array\"); pm.expect(result.count).to.eql(result.data.length); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/dishes"
+      },
+      "response": []
+    },
+    {
+      "name": "03 Фильтр по категории",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+              "pm.test(\"Только пицца\", () => { const r = pm.response.json(); pm.expect(r.count).to.be.greaterThan(0); r.data.forEach(i => pm.expect(i.category).to.eql(\"Пицца\")); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/dishes?category=Пицца"
+      },
+      "response": []
+    },
+    {
+      "name": "04 Создать блюдо",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.unset(\"dishId\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+              "const data = pm.response.json().data;",
+              "pm.test(\"Создано нужное блюдо\", () => { pm.expect(data.name).to.eql(\"Тест Postman: сырные палочки\"); pm.expect(data.price).to.eql(1200); });",
+              "pm.collectionVariables.set(\"dishId\", data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/dishes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Тест Postman: сырные палочки\",\n  \"category\": \"Закуски\",\n  \"price\": 1200,\n  \"available\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "05 Прочитать созданное блюдо",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+              "pm.test(\"Правильный id\", () => pm.expect(pm.response.json().data.id).to.eql(Number(pm.collectionVariables.get(\"dishId\"))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/dishes/{{dishId}}"
+      },
+      "response": []
+    },
+    {
+      "name": "06 Изменить блюдо",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+              "pm.test(\"Цена и доступность изменены\", () => { const d = pm.response.json().data; pm.expect(d.price).to.eql(1400); pm.expect(d.available).to.eql(false); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/dishes/{{dishId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Тест Postman: сырные палочки\",\n  \"category\": \"Закуски\",\n  \"price\": 1400,\n  \"available\": false\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "07 Удалить тестовое блюдо",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));",
+              "pm.test(\"Тело ответа пустое\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/dishes/{{dishId}}"
+      },
+      "response": []
+    },
+    {
+      "name": "08 Удалённое блюдо не найдено",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/dishes/{{dishId}}"
+      },
+      "response": []
+    },
+    {
+      "name": "09 Ошибка: нет названия",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/dishes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"category\": \"Закуски\",\n  \"price\": 1200\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10 Ошибка: отрицательная цена",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/dishes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Тест Postman: сырные палочки\",\n  \"category\": \"Закуски\",\n  \"price\": -1,\n  \"available\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "11 Ошибка: некорректный JSON",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/dishes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "12 Ошибка: неверный id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/dishes/abc"
+      },
+      "response": []
+    },
+    {
+      "name": "13 Ошибка: неизвестный маршрут",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/unknown"
+      },
+      "response": []
+    },
+    {
+      "name": "14 Ошибка: неверный фильтр",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Есть X-Request-Id\", () => pm.expect(pm.response.headers.get(\"X-Request-Id\")).to.be.a(\"string\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/dishes?available=yes"
+      },
+      "response": []
+    }
+  ]
+}
